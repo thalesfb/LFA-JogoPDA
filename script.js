@@ -1,36 +1,17 @@
 /** Operação Cofre LIFO — interface do jogo e planta baixa visual top-down. */
 import {
   FINAL_STATE,
+  INPUT_SYMBOLS,
   TRANSITIONS,
   applyTransition,
   createInitialConfiguration,
 } from "./src/pda.js";
-
-const STATES_META = {
-  q0: { name: "Beco / Entrada",    x: 115, y: 290, color: "#38bdf8" },
-  q2: { name: "Sala de Segurança", x: 350, y: 100, color: "#fbbf24" },
-  q1: { name: "Saguão Central",    x: 350, y: 290, color: "#38bdf8" },
-  q3: { name: "Sala de TI",        x: 350, y: 480, color: "#a78bfa" },
-  q4: { name: "Portão Blindado",   x: 590, y: 290, color: "#38bdf8" },
-  q5: { name: "Interior do Cofre", x: 830, y: 105, color: "#f472b6" },
-  q6: { name: "Corredor de Fuga",  x: 830, y: 290, color: "#38bdf8" },
-  qf: { name: "Garagem (Fuga)",    x: 830, y: 475, color: "#10b981" }
-};
-
-const SYMBOL_DESC = {
-  i: "Entrar no Saguão",
-  c: "Clonar Cartão (+C)",
-  k: "Coletar Kit TI (+K)",
-  v: "Voltar ao Saguão",
-  p: "Avançar ao Portão",
-  d: "Usar Cartão (-C)",
-  s: "Usar Kit TI (-K)",
-  f: "Destravar Cofre (topo Z)",
-  m: "Pegar Malote (+M)",
-  r: "Ir p/ Corredor Fuga",
-  l: "Ocultar Malote (-M)",
-  e: "Escapar na Garagem (topo Z)"
-};
+import {
+  STATES_META,
+  SYMBOL_DESC,
+  gateActionForDirection,
+  physicalRoomByState,
+} from "./src/game-config.js";
 
 let pda = {
   ...createInitialConfiguration(),
@@ -94,14 +75,15 @@ function resetPDA(keepInput = true) {
 }
 
 function enqueueMovement(fromSt, toSt) {
+  const fromRoom = physicalRoomByState[fromSt];
+  const toRoom = physicalRoomByState[toSt];
+
+  if (fromRoom === toRoom) {
+    return;
+  }
+
   const dest = { x: STATES_META[toSt].x, y: STATES_META[toSt].y + 10 };
-  if (fromSt === toSt) {
-    pda.waypoints = [
-      { x: dest.x - 16, y: dest.y - 5 },
-      { x: dest.x + 16, y: dest.y - 5 },
-      dest
-    ];
-  } else if (fromSt === "q4" && toSt === "q5") {
+  if (fromRoom === "q4" && toRoom === "q5") {
     pda.waypoints = [
       { x: 590, y: 105 + 10 },
       dest
@@ -300,10 +282,14 @@ function handleDirection(dir) {
     if (dir === "W") symbolToEmit = "v";
     else showToast("Na Sala de TI (q₃): pressione W para voltar ao Saguão.");
   } else if (st === "q4") {
-    if (dir === "W") symbolToEmit = "d";
-    else if (dir === "S") symbolToEmit = "s";
-    else if (dir === "D") symbolToEmit = "f";
-    else showToast("No Portão (q₄): W (usar Cartão), S (usar Kit) ou D (abrir Cofre).");
+    symbolToEmit = gateActionForDirection(st, dir);
+    if (!symbolToEmit) showToast("No Portão (q₄), use W (Cartão) ou S (Kit). D abre o cofre somente em q₈.");
+  } else if (st === "q7") {
+    symbolToEmit = gateActionForDirection(st, dir);
+    if (!symbolToEmit) showToast("No Portão (q₇), use W ou S para apresentar a segunda credencial. D ainda não abre o cofre.");
+  } else if (st === "q8") {
+    symbolToEmit = gateActionForDirection(st, dir);
+    if (!symbolToEmit) showToast("No Portão (q₈), use D para abrir o cofre; W e S tentam uma credencial restante.");
   } else if (st === "q5") {
     if (dir === "A" || dir === "W") symbolToEmit = "m";
     else if (dir === "S" || dir === "D") symbolToEmit = "r";
@@ -492,7 +478,7 @@ function drawRoomProps(key, rx, ry, w, h) {
     ctx.font = "bold 10px monospace";
     ctx.fillText("KIT", rx + 148, ry + 56);
   } else if (key === "q4") {
-    const unlocked = getStackTop() === "Z" && (pda.state === "q4" || pda.state === "q5" || pda.state === "q6" || pda.state === "qf");
+    const unlocked = getStackTop() === "Z" && (pda.state === "q8" || pda.state === "q5" || pda.state === "q6" || pda.state === "qf");
     ctx.fillStyle = "#475569";
     ctx.fillRect(rx + 144, ry + 26, 14, 18);
     ctx.fillRect(rx + 144, ry + 72, 14, 18);
@@ -548,7 +534,9 @@ function drawRoomProps(key, rx, ry, w, h) {
 }
 
 function drawRoom(key, meta) {
-  const isCurrent = pda.state === key;
+  const isCurrent = physicalRoomByState[pda.state] === physicalRoomByState[key];
+  const currentMeta = isCurrent ? STATES_META[pda.state] : meta;
+  const displayedState = isCurrent ? pda.state : key;
   const w = 186;
   const h = 108;
   const rx = meta.x - w / 2;
@@ -564,7 +552,7 @@ function drawRoom(key, meta) {
   else if (key === "qf") ctx.fillStyle = "#0f172a";
   else ctx.fillStyle = "#131c31";
 
-  ctx.strokeStyle = isCurrent ? meta.color : "#475569";
+  ctx.strokeStyle = isCurrent ? currentMeta.color : "#475569";
   ctx.lineWidth = isCurrent ? 3.5 : 2.5;
   ctx.beginPath();
   ctx.roundRect(rx, ry, w, h, 10);
@@ -578,15 +566,15 @@ function drawRoom(key, meta) {
   ctx.roundRect(rx + 2, ry + 2, w - 4, 24, [8, 8, 0, 0]);
   ctx.fill();
 
-  ctx.fillStyle = meta.color;
+  ctx.fillStyle = currentMeta.color;
   ctx.font = "bold 13px monospace";
   ctx.textAlign = "left";
-  ctx.fillText(key, rx + 10, ry + 18);
+  ctx.fillText(displayedState, rx + 10, ry + 18);
 
   ctx.fillStyle = "#f8fafc";
   ctx.font = "bold 12px sans-serif";
   ctx.textAlign = "right";
-  ctx.fillText(meta.name, rx + w - 10, ry + 18);
+  ctx.fillText(currentMeta.name, rx + w - 10, ry + 18);
 
   ctx.fillStyle = "rgba(9, 13, 22, 0.82)";
   ctx.beginPath();
@@ -601,12 +589,14 @@ function drawRoom(key, meta) {
     q1: "[W]Seg [S]TI [D]Portão",
     q2: "+Cartão(C) • [S]Voltar",
     q3: "+Kit(K) • [W]Voltar",
-    q4: "[W]-C [S]-K [D]Cofre",
+    q4: "[W]-C [S]-K",
+    q7: "[W]/[S] segunda credencial",
+    q8: "[D] Abrir Cofre",
     q5: "[W]+Malote • [D]Fuga(r)",
     q6: "[W]-Malote • [D]Sair(e)",
     qf: "FUGA CONCLUÍDA (ACEITA)"
   };
-  ctx.fillText(hints[key] || "", meta.x, ry + h - 8);
+  ctx.fillText(hints[displayedState] || hints[key] || "", meta.x, ry + h - 8);
   ctx.restore();
 }
 
@@ -709,7 +699,9 @@ function renderLoop() {
   drawCorridorFloor([{ x: 830, y: 105 }, { x: 830, y: 290 }], "r", { x: 36, y: 0 });
   drawCorridorFloor([{ x: 830, y: 290 }, { x: 830, y: 475 }], "e (Z)", { x: 42, y: 0 });
 
-  Object.entries(STATES_META).forEach(([key, meta]) => drawRoom(key, meta));
+  Object.entries(STATES_META)
+    .filter(([key]) => physicalRoomByState[key] === key)
+    .forEach(([key, meta]) => drawRoom(key, meta));
   drawAgent(pda.agentPos.x, pda.agentPos.y, isMoving);
 
   requestAnimationFrame(renderLoop);
@@ -737,6 +729,14 @@ function populateDeltaTable() {
   ).join("");
 }
 
+function populateSymbolLegend() {
+  const legend = document.getElementById("symbol-legend");
+  legend.innerHTML = INPUT_SYMBOLS.map((symbol) => (
+    `<div><code>${symbol}</code> ${SYMBOL_DESC[symbol]}</div>`
+  )).join("");
+}
+
 populateDeltaTable();
+populateSymbolLegend();
 resetPDA();
 renderLoop();

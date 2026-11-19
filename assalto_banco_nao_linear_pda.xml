@@ -40,7 +40,17 @@
 			<y>260.0</y>
 			<label>Corredor Fuga</label>
 		</state>
-		<state id="7" name="qf">
+		<state id="7" name="q7">
+			<x>480.0</x>
+			<y>100.0</y>
+			<label>Portao - primeira credencial</label>
+		</state>
+		<state id="8" name="q8">
+			<x>480.0</x>
+			<y>420.0</y>
+			<label>Portao destravado</label>
+		</state>
+		<state id="9" name="qf">
 			<x>1080.0</x>
 			<y>260.0</y>
 			<label>Garagem / Fuga</label>
@@ -101,8 +111,7 @@
 			<pop>K</pop>
 			<push>K</push>
 		</transition>
-		<!-- Saguao -> Portao Blindado (Leste) - exige ambos os itens coletados (topo C com K abaixo, ou topo K com C abaixo) -->
-		<!-- Para manter deterministicamente simples e 100% fiel ao JFLAP, a ida ao portao ocorre com 'p' quando pilha nao esta vazia -->
+		<!-- Saguao -> Portao Blindado (Leste) -->
 		<transition>
 			<from>1</from>
 			<to>4</to>
@@ -117,24 +126,39 @@
 			<pop>K</pop>
 			<push>K</push>
 		</transition>
-		<!-- Portao Blindado: desarma travas em ordem LIFO (loops em q4 ate esvaziar C e K) -->
+		<!-- Primeira credencial: q4 -> q7 -->
 		<transition>
 			<from>4</from>
-			<to>4</to>
+			<to>7</to>
 			<read>d</read>
 			<pop>C</pop>
 			<push/>
 		</transition>
 		<transition>
 			<from>4</from>
-			<to>4</to>
+			<to>7</to>
 			<read>s</read>
 			<pop>K</pop>
 			<push/>
 		</transition>
-		<!-- Portao Blindado -> Cofre (so abre quando ambas as travas foram desarmadas, ou seja, topo == Z) -->
+		<!-- Segunda credencial: q7 -> q8 -->
 		<transition>
-			<from>4</from>
+			<from>7</from>
+			<to>8</to>
+			<read>d</read>
+			<pop>C</pop>
+			<push/>
+		</transition>
+		<transition>
+			<from>7</from>
+			<to>8</to>
+			<read>s</read>
+			<pop>K</pop>
+			<push/>
+		</transition>
+		<!-- Cofre abre apenas depois das duas credenciais, com topo Z -->
+		<transition>
+			<from>8</from>
 			<to>5</to>
 			<read>f</read>
 			<pop>Z</pop>
@@ -174,7 +198,7 @@
 		<!-- Corredor de Fuga -> Garagem/Final (so escapa quando todos os malotes foram ocultados, topo == Z) -->
 		<transition>
 			<from>6</from>
-			<to>7</to>
+			<to>9</to>
 			<read>e</read>
 			<pop>Z</pop>
 			<push>Z</push>

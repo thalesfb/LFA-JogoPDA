@@ -1,4 +1,4 @@
-export const STATES = Object.freeze(["q0", "q1", "q2", "q3", "q4", "q5", "q6", "qf"]);
+export const STATES = Object.freeze(["q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "qf"]);
 export const INPUT_SYMBOLS = Object.freeze(["i", "c", "k", "v", "p", "d", "s", "f", "m", "r", "l", "e"]);
 export const INITIAL_STATE = "q0";
 export const INITIAL_STACK_SYMBOL = "Z";
@@ -14,9 +14,11 @@ const transitionRules = [
   { from: "q3", read: "v", pop: "K", to: "q1", push: ["K"], desc: "Retorna da TI ao Saguão" },
   { from: "q1", read: "p", pop: "C", to: "q4", push: ["C"], desc: "Avança ao Portão Blindado com Cartão no topo" },
   { from: "q1", read: "p", pop: "K", to: "q4", push: ["K"], desc: "Avança ao Portão Blindado com Kit no topo" },
-  { from: "q4", read: "d", pop: "C", to: "q4", push: [], desc: "Desarma leitor biométrico usando Cartão C (pop)" },
-  { from: "q4", read: "s", pop: "K", to: "q4", push: [], desc: "Detona trava mecânica usando Kit K (pop)" },
-  { from: "q4", read: "f", pop: "Z", to: "q5", push: ["Z"], desc: "Pilha limpa (Z): abre a porta do Cofre" },
+  { from: "q4", read: "d", pop: "C", to: "q7", push: [], desc: "Usa o Cartão C na primeira trava" },
+  { from: "q4", read: "s", pop: "K", to: "q7", push: [], desc: "Usa o Kit K na primeira trava" },
+  { from: "q7", read: "d", pop: "C", to: "q8", push: [], desc: "Usa o Cartão C na segunda trava" },
+  { from: "q7", read: "s", pop: "K", to: "q8", push: [], desc: "Usa o Kit K na segunda trava" },
+  { from: "q8", read: "f", pop: "Z", to: "q5", push: ["Z"], desc: "Com as duas travas abertas (Z), entra no Cofre" },
   { from: "q5", read: "m", pop: "Z", to: "q5", push: ["M", "Z"], desc: "Coleta 1º malote de dinheiro (+M)" },
   { from: "q5", read: "m", pop: "M", to: "q5", push: ["M", "M"], desc: "Coleta malote adicional (+M)" },
   { from: "q5", read: "r", pop: "M", to: "q6", push: ["M"], desc: "Sai do Cofre para o Corredor de Fuga" },

@@ -44,20 +44,7 @@
           </div>
         </div>
 
-        <div class="legend-grid">
-          <div><code>i</code> Entrar no Saguão</div>
-          <div><code>c</code> Coletar Cartão (+C)</div>
-          <div><code>k</code> Coletar Kit TI (+K)</div>
-          <div><code>v</code> Voltar ao Saguão</div>
-          <div><code>p</code> Ir ao Portão</div>
-          <div><code>d</code> Usar Cartão (-C)</div>
-          <div><code>s</code> Usar Kit TI (-K)</div>
-          <div><code>f</code> Abrir Cofre (topo Z)</div>
-          <div><code>m</code> Pegar Malote (+M)</div>
-          <div><code>r</code> Ir p/ Corredor Fuga</div>
-          <div><code>l</code> Ocultar Malote (-M)</div>
-          <div><code>e</code> Fugir Garagem (topo Z)</div>
-        </div>
+        <div id="symbol-legend" class="legend-grid" aria-label="Símbolos de entrada"></div>
       </div>
 
       <!-- Modo Roteiro (Cadeia de Entrada) -->
@@ -165,17 +152,19 @@
       </div>
 
       <div class="formal-spec">
-        <p><strong>M = (Q, Σ, Γ, δ, q₀, Z, F)</strong> com 8 estados (requisito: 5 a 10 estados):</p>
+        <p><strong>M = (Q, Σ, Γ, δ, q₀, Z, F)</strong> com 10 estados (requisito: 5 a 10 estados):</p>
         <ul>
-          <li><strong>Q</strong> = {q₀, q₁, q₂, q₃, q₄, q₅, q₆, qf}</li>
+          <li><strong>Q</strong> = {q₀, q₁, q₂, q₃, q₄, q₅, q₆, q₇, q₈, qf}</li>
           <li><strong>Σ</strong> = {i, c, k, v, p, d, s, f, m, r, l, e}</li>
           <li><strong>Γ</strong> = {Z, C, K, M} (Z = símbolo inicial da pilha)</li>
           <li><strong>F</strong> = {qf} (Aceitação por estado final após consumir toda a cadeia)</li>
         </ul>
+        <p><strong>Portão:</strong> q₄ → q₇ → q₈ consome uma credencial C e uma K em qualquer ordem; só q₈ com topo Z permite abrir o cofre.</p>
+        <p><strong>L</strong> = {icvkvpsdf mⁿ r lⁿ e | n ≥ 1} ∪ {ikvcvpdsf mⁿ r lⁿ e | n ≥ 1}</p>
       </div>
 
       <div class="svg-container">
-        <svg viewBox="0 0 1120 470" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+        <svg class="pda-diagram" viewBox="0 0 1120 470" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" aria-label="Diagrama do autômato de pilha">
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
@@ -183,76 +172,88 @@
           </defs>
 
           <polygon points="22,235 48,223 48,247" fill="#38bdf8" />
-          <line x1="92" y1="235" x2="215" y2="235" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
-          <text x="153" y="225" fill="#e2e8f0" font-size="12" text-anchor="middle">i, Z ; Z</text>
+          <line data-edge="q0|q1" x1="92" y1="235" x2="215" y2="235" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q0|i|Z|q1|Z" x="153" y="225" fill="#e2e8f0" font-size="12" text-anchor="middle">i, Z ; Z</text>
 
-          <path d="M 230 212 Q 195 150 230 92" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
-          <text x="165" y="145" fill="#fbbf24" font-size="11" text-anchor="middle">c, Z ; CZ</text>
-          <text x="165" y="160" fill="#fbbf24" font-size="11" text-anchor="middle">c, K ; CK</text>
+          <path data-edge="q1|q2" d="M 230 212 Q 195 150 230 92" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q1|c|Z|q2|CZ" x="165" y="145" fill="#fbbf24" font-size="11" text-anchor="middle">c, Z ; CZ</text>
+          <text data-transition="q1|c|K|q2|CK" x="165" y="160" fill="#fbbf24" font-size="11" text-anchor="middle">c, K ; CK</text>
 
-          <path d="M 260 92 Q 295 150 260 212" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
-          <text x="315" y="152" fill="#94a3b8" font-size="11" text-anchor="middle">v, C ; C</text>
+          <path data-edge="q2|q1" d="M 260 92 Q 295 150 260 212" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q2|v|C|q1|C" x="315" y="152" fill="#94a3b8" font-size="11" text-anchor="middle">v, C ; C</text>
 
-          <path d="M 230 258 Q 195 320 230 378" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
-          <text x="165" y="315" fill="#a78bfa" font-size="11" text-anchor="middle">k, Z ; KZ</text>
-          <text x="165" y="330" fill="#a78bfa" font-size="11" text-anchor="middle">k, C ; KC</text>
+          <path data-edge="q1|q3" d="M 230 258 Q 195 320 230 378" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q1|k|Z|q3|KZ" x="165" y="315" fill="#a78bfa" font-size="11" text-anchor="middle">k, Z ; KZ</text>
+          <text data-transition="q1|k|C|q3|KC" x="165" y="330" fill="#a78bfa" font-size="11" text-anchor="middle">k, C ; KC</text>
 
-          <path d="M 260 378 Q 295 320 260 258" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
-          <text x="315" y="322" fill="#94a3b8" font-size="11" text-anchor="middle">v, K ; K</text>
+          <path data-edge="q3|q1" d="M 260 378 Q 295 320 260 258" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q3|v|K|q1|K" x="315" y="322" fill="#94a3b8" font-size="11" text-anchor="middle">v, K ; K</text>
 
-          <line x1="272" y1="235" x2="435" y2="235" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
-          <text x="355" y="218" fill="#e2e8f0" font-size="11" text-anchor="middle">p, C ; C</text>
-          <text x="355" y="252" fill="#e2e8f0" font-size="11" text-anchor="middle">p, K ; K</text>
+          <line data-edge="q1|q4" x1="272" y1="235" x2="435" y2="235" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q1|p|C|q4|C" x="355" y="218" fill="#e2e8f0" font-size="11" text-anchor="middle">p, C ; C</text>
+          <text data-transition="q1|p|K|q4|K" x="355" y="252" fill="#e2e8f0" font-size="11" text-anchor="middle">p, K ; K</text>
 
-          <path d="M 448 212 C 430 155, 495 155, 477 212" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
-          <text x="462" y="146" fill="#34d399" font-size="11" text-anchor="middle">d, C ; λ</text>
-          <text x="462" y="161" fill="#34d399" font-size="11" text-anchor="middle">s, K ; λ</text>
+          <line data-edge="q4|q7" x1="462" y1="211" x2="462" y2="116" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q4|d|C|q7|" x="409" y="168" fill="#fbbf24" font-size="10" text-anchor="middle">d, C ; λ</text>
+          <text data-transition="q4|s|K|q7|" x="516" y="184" fill="#a78bfa" font-size="10" text-anchor="middle">s, K ; λ</text>
 
-          <line x1="489" y1="235" x2="625" y2="235" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
-          <text x="557" y="225" fill="#e2e8f0" font-size="12" text-anchor="middle">f, Z ; Z</text>
+          <line data-edge="q7|q8" x1="462" y1="114" x2="462" y2="366" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q7|d|C|q8|" x="408" y="225" fill="#fbbf24" font-size="10" text-anchor="middle">d, C ; λ</text>
+          <text data-transition="q7|s|K|q8|" x="516" y="244" fill="#a78bfa" font-size="10" text-anchor="middle">s, K ; λ</text>
 
-          <path d="M 638 212 C 620 155, 685 155, 667 212" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
-          <text x="652" y="146" fill="#f472b6" font-size="11" text-anchor="middle">m, Z ; MZ</text>
-          <text x="652" y="161" fill="#f472b6" font-size="11" text-anchor="middle">m, M ; MM</text>
+          <path data-edge="q8|q5" d="M 485 375 Q 570 320 657 258" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q8|f|Z|q5|Z" x="570" y="329" fill="#34d399" font-size="11" text-anchor="middle">f, Z ; Z</text>
 
-          <line x1="679" y1="235" x2="815" y2="235" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
-          <text x="747" y="225" fill="#e2e8f0" font-size="12" text-anchor="middle">r, M ; M</text>
+          <path data-edge="q5|q5" d="M 666 212 C 648 155 713 155 695 212" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q5|m|Z|q5|MZ" x="680" y="146" fill="#f472b6" font-size="11" text-anchor="middle">m, Z ; MZ</text>
+          <text data-transition="q5|m|M|q5|MM" x="680" y="161" fill="#f472b6" font-size="11" text-anchor="middle">m, M ; MM</text>
 
-          <path d="M 828 212 C 810 155, 875 155, 857 212" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
-          <text x="842" y="156" fill="#34d399" font-size="11" text-anchor="middle">l, M ; λ</text>
+          <line data-edge="q5|q6" x1="717" y1="235" x2="841" y2="235" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q5|r|M|q6|M" x="779" y="225" fill="#e2e8f0" font-size="12" text-anchor="middle">r, M ; M</text>
 
-          <line x1="869" y1="235" x2="1002" y2="235" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
-          <text x="935" y="225" fill="#e2e8f0" font-size="12" text-anchor="middle">e, Z ; Z</text>
+          <path data-edge="q6|q6" d="M 852 212 C 834 155 899 155 881 212" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q6|l|M|q6|" x="866" y="156" fill="#34d399" font-size="11" text-anchor="middle">l, M ; λ</text>
 
-          <circle cx="70" cy="235" r="24" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5" />
+          <line data-edge="q6|qf" x1="891" y1="235" x2="1002" y2="235" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+          <text data-transition="q6|e|Z|qf|Z" x="949" y="225" fill="#e2e8f0" font-size="12" text-anchor="middle">e, Z ; Z</text>
+
+          <circle data-state="q0" cx="70" cy="235" r="24" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5" />
           <text x="70" y="240" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">q0</text>
           <text x="70" y="275" fill="#94a3b8" font-size="11" text-anchor="middle">Entrada</text>
 
-          <circle cx="245" cy="235" r="24" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5" />
+          <circle data-state="q1" cx="245" cy="235" r="24" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5" />
           <text x="245" y="240" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">q1</text>
           <text x="245" y="275" fill="#94a3b8" font-size="11" text-anchor="middle">Saguão</text>
 
-          <circle cx="245" cy="70" r="24" fill="#1e293b" stroke="#fbbf24" stroke-width="2.5" />
+          <circle data-state="q2" cx="245" cy="70" r="24" fill="#1e293b" stroke="#fbbf24" stroke-width="2.5" />
           <text x="245" y="75" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">q2</text>
           <text x="245" y="36" fill="#fbbf24" font-size="11" text-anchor="middle">Segurança</text>
 
-          <circle cx="245" cy="400" r="24" fill="#1e293b" stroke="#a78bfa" stroke-width="2.5" />
+          <circle data-state="q3" cx="245" cy="400" r="24" fill="#1e293b" stroke="#a78bfa" stroke-width="2.5" />
           <text x="245" y="405" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">q3</text>
           <text x="245" y="442" fill="#a78bfa" font-size="11" text-anchor="middle">Sala TI</text>
 
-          <circle cx="462" cy="235" r="24" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5" />
+          <circle data-state="q4" cx="462" cy="235" r="24" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5" />
           <text x="462" y="240" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">q4</text>
           <text x="462" y="275" fill="#94a3b8" font-size="11" text-anchor="middle">Portão</text>
 
-          <circle cx="652" cy="235" r="24" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5" />
-          <text x="652" y="240" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">q5</text>
-          <text x="652" y="275" fill="#94a3b8" font-size="11" text-anchor="middle">Cofre</text>
+          <circle data-state="q7" cx="462" cy="90" r="24" fill="#1e293b" stroke="#fbbf24" stroke-width="2.5" />
+          <text x="462" y="95" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">q7</text>
+          <text x="462" y="55" fill="#fbbf24" font-size="10" text-anchor="middle">1 credencial</text>
 
-          <circle cx="842" cy="235" r="24" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5" />
-          <text x="842" y="240" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">q6</text>
-          <text x="842" y="275" fill="#94a3b8" font-size="11" text-anchor="middle">Corredor</text>
+          <circle data-state="q8" cx="462" cy="390" r="24" fill="#1e293b" stroke="#34d399" stroke-width="2.5" />
+          <text x="462" y="395" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">q8</text>
+          <text x="462" y="432" fill="#34d399" font-size="10" text-anchor="middle">2 credenciais</text>
 
-          <circle cx="1032" cy="235" r="26" fill="#064e3b" stroke="#10b981" stroke-width="2.5" />
+          <circle data-state="q5" cx="680" cy="235" r="24" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5" />
+          <text x="680" y="240" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">q5</text>
+          <text x="680" y="275" fill="#94a3b8" font-size="11" text-anchor="middle">Cofre</text>
+
+          <circle data-state="q6" cx="866" cy="235" r="24" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5" />
+          <text x="866" y="240" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">q6</text>
+          <text x="866" y="275" fill="#94a3b8" font-size="11" text-anchor="middle">Corredor</text>
+
+          <circle data-state="qf" cx="1032" cy="235" r="26" fill="#064e3b" stroke="#10b981" stroke-width="2.5" />
           <circle cx="1032" cy="235" r="20" fill="none" stroke="#10b981" stroke-width="2" />
           <text x="1032" y="240" fill="#ecfdf5" font-size="14" font-weight="bold" text-anchor="middle">qf</text>
           <text x="1032" y="277" fill="#10b981" font-size="11" text-anchor="middle">Garagem (Final)</text>
